@@ -26,7 +26,7 @@ y_train = [] # training labels.
 x_test = [] # testing images.
 y_test = [] # testing labels.
 
-image_size = 256
+image_size = 50
 
 train_path = 'cleaned/Training'
 test_path = 'cleaned/Testing'
@@ -36,8 +36,7 @@ for label in labels:
     for file in tqdm(os.listdir(train_dir)):
         image = cv2.imread(os.path.join(train_dir, file), 0)  # load images in gray.
         image = cv2.bilateralFilter(image, 2, 50, 50)  # remove images noise.
-        # image = cv2.applyColorMap(image, cv2.COLORMAP_BONE)  # produce a pseudocolored image.
-        # image = cv2.resize(image, (image_size, image_size))  # resize images.
+        image = cv2.resize(image, (image_size, image_size))  # resize images.
         image = image[:, :, np.newaxis] # adds the value one representing greyscale
         x_train.append(image)
         y_train.append(labels.index(label))
@@ -46,21 +45,25 @@ for label in labels:
     for file in tqdm(os.listdir(test_dir)):
         image = cv2.imread(os.path.join(test_dir, file), 0)
         image = cv2.bilateralFilter(image, 2, 50, 50)
-        # image = cv2.applyColorMap(image, cv2.COLORMAP_BONE)
-        # image = cv2.resize(image, (image_size, image_size))
+        image = cv2.resize(image, (image_size, image_size))
         image = image[:, :, np.newaxis]
         x_test.append(image)
         y_test.append(labels.index(label))
 
+x_test, x_val, y_test, y_val = train_test_split(x_test, y_test, test_size=0.5, random_state=123) # testing dir split into test and validation sets
+# research EarlyStopping
 
 x_train = np.array(x_train)
 y_train = np.array(y_train)
 x_test = np.array(x_test)
 y_test = np.array(y_test)
+x_val = np.array(x_val)
+y_val = np.array(y_val)
 
-print(x_train.shape)
-
-x_train, y_train = shuffle(x_train,y_train, random_state=42)
+# 7023 images total
+print(x_train.shape) # 81% 5712 images
+print(x_test.shape) # 9% 655 images
+print(x_val.shape) # 9% 656 images
 
 
 # images = [x_train[i] for i in range(15)]
@@ -95,59 +98,65 @@ datagen.fit(x_train)
 # plt.show()
 
 
+# This callback will stop the training when there is no improvement in the loss for three consecutive epochs.
+callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=5)
+
+
+# Convolutional Neural Network Model
+# model = tf.keras.Sequential([
+#     tf.keras.layers.Input(shape=(image_size, image_size, 1)), # B&W images
+#     tf.keras.layers.Rescaling(1. / 255, input_shape=(image_size, image_size, 1)), # normalize Images into range 0 to 1.
+#
+#     # Convolutional layer 1
+#     tf.keras.layers.Conv2D(16, (3,3), input_shape=(64, 64, 1), activation='relu'),
+#
+#     tf.keras.layers.Flatten(),
+#
+#     # Neural network
+#
+#     tf.keras.layers.Dense(units= 16, activation='relu'),
+#     tf.keras.layers.Dropout(0.2),
+#     tf.keras.layers.Dense(units=4, activation='softmax'),
+#
+#
+#     # tf.keras.layers.Conv2D(16, 3, padding='same', activation='relu'),
+#     # tf.keras.layers.MaxPooling2D(),
+#     # tf.keras.layers.Conv2D(32, 3, padding='same', activation='relu'),
+#     # tf.keras.layers.MaxPooling2D(),
+#     # tf.keras.layers.Conv2D(64, 3, padding='same', activation='relu'),
+#     # tf.keras.layers.MaxPooling2D(),
+#     # tf.keras.layers.Dense(128, activation='relu'),
+#     # tf.keras.layers.Dense(len(labels))
+#
+#     # tf.keras.layers.Input(shape=(image_size, image_size, 1)),  # B&W images
+#     # tf.keras.layers.Dense(128, activation='relu'),
+# ])
+
+# Feedforward Neural Network Model
 model = tf.keras.Sequential([
-    tf.keras.layers.Input(shape=(image_size, image_size, 1)), # B&W images
+    tf.keras.layers.Input(shape=(image_size, image_size, 1)),  # B&W images
     tf.keras.layers.Rescaling(1. / 255, input_shape=(image_size, image_size, 1)), # normalize Images into range 0 to 1.
-
-    # Convolutional layer 1
-    tf.keras.layers.Conv2D(32,(3,3), input_shape=(64, 64, 1), activation='relu'),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.MaxPooling2D(pool_size=(2,2)),
-
-    # Convolutional layer 2
-    tf.keras.layers.Conv2D(32,(3,3), activation='relu'),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.MaxPooling2D(pool_size=(2,2)),
-
     tf.keras.layers.Flatten(),
-
-    # Neural network
-
-    tf.keras.layers.Dense(units= 252, activation='relu'),
-    tf.keras.layers.Dropout(0.2),
-    tf.keras.layers.Dense(units=252, activation='relu'),
-    tf.keras.layers.Dropout(0.2),
-    tf.keras.layers.Dense(units=4, activation='softmax'),
-
-
-    # tf.keras.layers.Conv2D(16, 3, padding='same', activation='relu'),
-    # tf.keras.layers.MaxPooling2D(),
-    # tf.keras.layers.Conv2D(32, 3, padding='same', activation='relu'),
-    # tf.keras.layers.MaxPooling2D(),
-    # tf.keras.layers.Conv2D(64, 3, padding='same', activation='relu'),
-    # tf.keras.layers.MaxPooling2D(),
-    # tf.keras.layers.Flatten(),
-    # tf.keras.layers.Dense(128, activation='relu'),
-    # tf.keras.layers.Dense(len(labels))
-
-    # tf.keras.layers.Input(shape=(image_size, image_size, 1)),  # B&W images
-    # tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(80, activation='relu'),
+    # tf.keras.layers.Dense(30, activation='relu'),
+    # tf.keras.layers.Dense(10, activation='relu'),
+    tf.keras.layers.Dense(4, activation='softmax'), # total probability to be one but not necessary for hidden layers
 ])
 
 model.compile(optimizer='adam',
              loss='sparse_categorical_crossentropy',
-             metrics=['sparse_categorical_accuracy'])
+             metrics=['accuracy'])
 
 model.summary()
 
-
+print(x_train.shape, y_train.shape)
+train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train)).shuffle(5000, reshuffle_each_iteration=True).batch(32)
 # training the model
-history = model.fit(x_train,
-                    y_train,
-                    epochs = 10,
-                    batch_size = 32,
+history = model.fit(train_ds,
+                    epochs = 300,
                     verbose = 1,
-                    validation_data = (x_test, y_test))
+                    validation_data = (x_val, y_val),
+                    callbacks=[callback])
 
 
 # plotting losses
@@ -156,5 +165,13 @@ plt.plot(history.history['val_loss'])
 plt.title('Model Loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
-plt.legend(['Test', 'Validation'], loc='upper right')
+plt.legend(['Training', 'Validation'], loc='upper right')
 plt.show()
+
+
+# plot accuracy against epoch count
+# plt.plot(history.history['sparse_categorical_accuracy'])
+# plt.show()
+
+# confusion matrix
+# ROC True Positives against True Negatives
