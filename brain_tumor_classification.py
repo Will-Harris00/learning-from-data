@@ -4,7 +4,8 @@ from keras.models import Sequential,Model
 from keras.applications.resnet import ResNet50
 from keras.preprocessing.image import ImageDataGenerator
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix,classification_report
+from sklearn.metrics import confusion_matrix, classification_report, plot_confusion_matrix, \
+    accuracy_score
 from sklearn.utils import shuffle
 import matplotlib.pyplot as plt
 from tensorflow import keras
@@ -138,8 +139,6 @@ model = tf.keras.Sequential([
     tf.keras.layers.Rescaling(1. / 255, input_shape=(image_size, image_size, 1)), # normalize Images into range 0 to 1.
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(80, activation='relu'),
-    # tf.keras.layers.Dense(30, activation='relu'),
-    # tf.keras.layers.Dense(10, activation='relu'),
     tf.keras.layers.Dense(4, activation='softmax'), # total probability to be one but not necessary for hidden layers
 ])
 
@@ -153,7 +152,7 @@ print(x_train.shape, y_train.shape)
 train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train)).shuffle(5000, reshuffle_each_iteration=True).batch(32)
 # training the model
 history = model.fit(train_ds,
-                    epochs = 300,
+                    epochs = 5,
                     verbose = 1,
                     validation_data = (x_val, y_val),
                     callbacks=[callback])
@@ -169,9 +168,74 @@ plt.legend(['Training', 'Validation'], loc='upper right')
 plt.show()
 
 
-# plot accuracy against epoch count
-# plt.plot(history.history['sparse_categorical_accuracy'])
-# plt.show()
+# validate on val set
+y_pred = model.predict(x_test)
 
-# confusion matrix
-# ROC True Positives against True Negatives
+#
+# predicted_labels = [[1 if x > 0.5 else 0 for x in y] for y in y_pred ] # removes one hot encoding for predictions
+# test = tf.one_hot(y_test, 4,
+#            on_value=1, off_value=0)
+
+# print('probability prediction')
+# print(y_pred)
+# print('predicted truth')
+# print(predicted_labels)
+# print('ground truth')
+# print(y_test)
+
+# # print(np.array(predicted_labels).flatten())
+
+
+# confusion_mtx = confusion_matrix(y_test, y_pred)
+# cm = plot_confusion_matrix(confusion_mtx, classes = labels, normalize=False)
+# print(confusion_mtx)
+
+
+
+# plt.imshow(cm, interpolation='nearest', cmap='RdBu')
+# plt.title('title')
+# plt.colorbar()
+# tick_marks = np.arange(len(labels))
+# plt.xticks(tick_marks, labels, rotation=45)
+# plt.yticks(tick_marks, labels)
+
+
+# def plt_confusion_matrix(cm, classes,
+#                           title='Confusion matrix',
+#                           cmap=plt.cm.Blues):
+#     """
+#     This function prints and plots the confusion matrix.
+#     Normalization can be applied by setting `normalize=True`.
+#     """
+#     cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+#     print("Normalized confusion matrix")
+#
+#     print(cm)
+#     plt.imshow(cm, interpolation='nearest', cmap=cmap)
+#     plt.title(title)
+#     plt.colorbar()
+#     tick_marks = np.arange(len(classes))
+#     plt.xticks(tick_marks, classes, rotation=45)
+#     plt.yticks(tick_marks, classes)
+#     fmt = '.2f'
+#
+#     thresh = cm.max() / 2.
+#
+#     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+#         plt.text(j, i, format(cm[i, j], fmt),
+#                  horizontalalignment="center",
+#                  color="white" if cm[i, j] > thresh else "black")
+#     plt.tight_layout()
+#     plt.ylabel('True label')
+#     plt.xlabel('Predicted label')
+# Compute confusion matrix
+
+# print(y_test)
+# print(y_pred)
+# cnf_matrix = confusion_matrix(test.values.argmax(axis=1), predicted_labels)
+# np.set_printoptions(precision=2)
+#
+# # Plot normalized confusion matrix
+# plt.figure()
+# plt_confusion_matrix(cnf_matrix, classes=labels, title='Normalized confusion matrix')
+# plt.show()

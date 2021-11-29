@@ -17,4 +17,6 @@ plt.xticks(x_pos, tumor)
 plt.title('Number of occurrences of each kind of brain tumor in the dataset')
 plt.ylabel('Number of samples')
 plt.xlabel('Type of tumor')
+for i in range(len(tumor)):
+        plt.text(i, sample_size[i], sample_size[i], ha = 'center')
 plt.show()
