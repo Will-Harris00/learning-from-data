@@ -5,7 +5,9 @@ from keras.applications.resnet import ResNet50
 from keras.preprocessing.image import ImageDataGenerator
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report, plot_confusion_matrix, \
-    accuracy_score
+    accuracy_score, roc_curve, auc
+from tensorflow.python.ops.numpy_ops import np_config
+np_config.enable_numpy_behavior() # used for ravel function to compress one hot encoding
 from sklearn.utils import shuffle
 import matplotlib.pyplot as plt
 from tensorflow import keras
@@ -21,6 +23,7 @@ import os
 import io
 
 labels = ['glioma', 'meningioma', 'notumor', 'pituitary']
+plane = ['coronal', 'coronal', 'sagittal', 'axial']
 
 x_train = [] # training images.
 y_train = [] # training labels.
@@ -87,16 +90,18 @@ datagen = ImageDataGenerator(
 datagen.fit(x_train)
 
 
-# plt.figure(figsize=(20, 16))
-#
-# images_path = ['/glioma/Tr-glTr_0000.jpg', '/meningioma/Tr-meTr_0000.jpg', '/notumor/Tr-noTr_0000.jpg', '/pituitary/Tr-piTr_0000.jpg']
-#
-# for i in range(4):
-#     ax = plt.subplot(2, 2, i + 1)
-#     img = cv2.imread(train_path + images_path[i])
-#     plt.imshow(img)
-#     plt.title(labels[i])
-# plt.show()
+plt.figure(figsize=(20, 16))
+
+images_path = ['/glioma/Tr-glTr_0000.jpg', '/meningioma/Tr-meTr_0000.jpg', '/notumor/Tr-no_0060.jpg', '/pituitary/Tr-piTr_0000.jpg']
+
+for i in range(4):
+    ax = plt.subplot(2, 2, i + 1)
+    img = cv2.imread(train_path + images_path[i])
+    plt.imshow(img)
+    plt.title(labels[i] + ' (' + plane[i] + ' plane)', fontsize=28)
+    plt.xticks([], minor=True)
+    plt.yticks([], minor=True)
+plt.show()
 
 
 # This callback will stop the training when there is no improvement in the loss for three consecutive epochs.
@@ -214,4 +219,58 @@ plt_confusion_matrix(cnf_matrix, classes=labels,
 plt.figure()
 plt_confusion_matrix(cnf_matrix, classes=labels, normalize=True,
                       title='Normalized confusion matrix')
+plt.show()
+
+
+
+# Generating ROC figures
+
+# Compute ROC curve and ROC area for each class
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+y_test_one_hot = tf.one_hot(y_test, 4) # depth 4
+
+for i in range(len(labels)):
+    fpr[i], tpr[i], _ = roc_curve(y_test_one_hot[:, i], predicted_prob[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+
+# print(y_test_one_hot)
+# print(predicted_prob)
+
+# Compute micro-average ROC curve and ROC area
+fpr["micro"], tpr["micro"], _ = roc_curve(y_test_one_hot.ravel(), predicted_prob.ravel())
+roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+
+# Plot ROC curve
+plt.figure()
+plt.plot(fpr["micro"], tpr["micro"],
+         label='micro-average ROC curve (area = {0:0.2f})'
+               ''.format(roc_auc["micro"]))
+for i in range(len(labels)):
+    plt.plot(fpr[i], tpr[i], label='ROC curve of ' + labels[i] + ' class (area = {1:0.2f})'
+                                   ''.format(i, roc_auc[i]))
+
+# Plot of a ROC curve for multiple classes
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver operating characteristic for all classes')
+plt.legend(loc="lower right")
+plt.show()
+
+
+# Plot of a ROC curve for a specific class
+chosen_class = 1 # meningioma
+plt.figure()
+plt.plot(fpr[chosen_class], tpr[chosen_class], label='ROC curve of ' + labels[chosen_class] + ' class (area = %0.2f)' % roc_auc[chosen_class])
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver operating characteristic of ' + labels[chosen_class] + ' class')
+plt.legend(loc="lower right")
 plt.show()
