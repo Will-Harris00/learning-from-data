@@ -78,7 +78,7 @@ print(x_val.shape) # 9% 656 images
 # plt.tight_layout()
 # plt.show()
 
-
+# Data augmentation
 # ImageDataGenerator transforms each image in the batch by a series of random translations, rotations, etc.
 datagen = ImageDataGenerator(
     rotation_range=10,
@@ -163,6 +163,9 @@ history = model.fit(train_ds,
                     callbacks=[callback])
 
 
+
+print(history.history.keys())
+
 # plotting losses
 plt.plot(history.history['loss'])
 plt.plot(history.history['val_loss'])
@@ -172,12 +175,21 @@ plt.xlabel('Epoch')
 plt.legend(['Training', 'Validation'], loc='upper right')
 plt.show()
 
+#  plotting accuracy
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('Model Accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(['Training', 'Validation'], loc='upper left')
+plt.show()
+
 
 # validate on val set
 predicted_prob = model.predict(x_test)
 predicted_class = np.argmax(predicted_prob, axis=-1)
 
-
+# Generate confusion matrix
 def plt_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
@@ -195,6 +207,8 @@ def plt_confusion_matrix(cm, classes,
     print(cm)
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
+    max_range = round(np.max(cm))
+    plt.clim(0, max_range)
     plt.colorbar()
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes, rotation=45)
@@ -208,13 +222,16 @@ def plt_confusion_matrix(cm, classes,
     plt.tight_layout(pad=2)
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+
 # Compute confusion matrix
 cnf_matrix = confusion_matrix(y_test, predicted_class)
 np.set_printoptions(precision=2)
+
 # Plot non-normalized confusion matrix
 plt.figure()
 plt_confusion_matrix(cnf_matrix, classes=labels,
                       title='Confusion matrix, without normalization')
+
 # Plot normalized confusion matrix
 plt.figure()
 plt_confusion_matrix(cnf_matrix, classes=labels, normalize=True,
@@ -262,15 +279,19 @@ plt.legend(loc="lower right")
 plt.show()
 
 
-# Plot of a ROC curve for a specific class
-chosen_class = 1 # meningioma
-plt.figure()
-plt.plot(fpr[chosen_class], tpr[chosen_class], label='ROC curve of ' + labels[chosen_class] + ' class (area = %0.2f)' % roc_auc[chosen_class])
-plt.plot([0, 1], [0, 1], 'k--')
-plt.xlim([0.0, 1.0])
-plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Receiver operating characteristic of ' + labels[chosen_class] + ' class')
-plt.legend(loc="lower right")
-plt.show()
+# # Plot of a ROC curve for a specific class
+# chosen_class = 1 # meningioma
+# plt.figure()
+# plt.plot(fpr[chosen_class], tpr[chosen_class], label='ROC curve of ' + labels[chosen_class] + ' class (area = %0.2f)' % roc_auc[chosen_class])
+# plt.plot([0, 1], [0, 1], 'k--')
+# plt.xlim([0.0, 1.0])
+# plt.ylim([0.0, 1.05])
+# plt.xlabel('False Positive Rate')
+# plt.ylabel('True Positive Rate')
+# plt.title('Receiver operating characteristic of ' + labels[chosen_class] + ' class')
+# plt.legend(loc="lower right")
+# plt.show()
+
+
+# classification report
+print(classification_report(y_test, predicted_class, target_names=labels))
