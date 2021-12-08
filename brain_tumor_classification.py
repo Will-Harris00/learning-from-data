@@ -109,43 +109,62 @@ callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
 
 
 # Convolutional Neural Network Model
-# model = tf.keras.Sequential([
-#     tf.keras.layers.Input(shape=(image_size, image_size, 1)), # B&W images
-#     tf.keras.layers.Rescaling(1. / 255, input_shape=(image_size, image_size, 1)), # normalize Images into range 0 to 1.
-#
-#     # Convolutional layer 1
-#     tf.keras.layers.Conv2D(16, (3,3), input_shape=(64, 64, 1), activation='relu'),
-#
-#     tf.keras.layers.Flatten(),
-#
-#     # Neural network
-#
-#     tf.keras.layers.Dense(units= 16, activation='relu'),
-#     tf.keras.layers.Dropout(0.2),
-#     tf.keras.layers.Dense(units=4, activation='softmax'),
-#
-#
-#     # tf.keras.layers.Conv2D(16, 3, padding='same', activation='relu'),
-#     # tf.keras.layers.MaxPooling2D(),
-#     # tf.keras.layers.Conv2D(32, 3, padding='same', activation='relu'),
-#     # tf.keras.layers.MaxPooling2D(),
-#     # tf.keras.layers.Conv2D(64, 3, padding='same', activation='relu'),
-#     # tf.keras.layers.MaxPooling2D(),
-#     # tf.keras.layers.Dense(128, activation='relu'),
-#     # tf.keras.layers.Dense(len(labels))
-#
-#     # tf.keras.layers.Input(shape=(image_size, image_size, 1)),  # B&W images
-#     # tf.keras.layers.Dense(128, activation='relu'),
-# ])
+model = tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(image_size, image_size, 1)), # B&W images
+    tf.keras.layers.Rescaling(1. / 255, input_shape=(image_size, image_size, 1)), # normalize Images into range 0 to 1.
+
+    # # Convolutional layer 1
+    # tf.keras.layers.Conv2D(16, (3,3), input_shape=(image_size, image_size, 1), activation='relu'),
+    #
+    # tf.keras.layers.MaxPooling2D(),
+    # tf.keras.layers.Flatten(),
+    #
+    # tf.keras.layers.Dense(units=80, activation='relu'),
+    # tf.keras.layers.Dropout(0.2),
+    # tf.keras.layers.Dense(units=len(labels), activation='softmax'),
+    #
+
+    # tf.keras.layers.Conv2D(16, 3, padding='same', activation='relu'),
+    # tf.keras.layers.MaxPooling2D(),
+    # # tf.keras.layers.Conv2D(32, 3, padding='same', activation='relu'),
+    # # tf.keras.layers.MaxPooling2D(),
+    # tf.keras.layers.Conv2D(64, 3, padding='same', activation='relu'),
+    # tf.keras.layers.MaxPooling2D(),
+    # tf.keras.layers.Flatten(),
+    # tf.keras.layers.Dense(128, activation='relu'),
+    # tf.keras.layers.Dense(len(labels), activation='softmax')
+
+
+    # one of the best combinations so far
+    # tf.keras.layers.Conv2D(filters = 16, kernel_size = (3, 3),
+    #                       input_shape = (image_size, image_size, 1), activation = "relu"),
+    # tf.keras.layers.MaxPooling2D(pool_size = (6,6)),
+    # tf.keras.layers.Conv2D(filters = 64, kernel_size = (3, 3), activation = "relu"),
+    # tf.keras.layers.MaxPooling2D(pool_size = (6,6)),
+    # tf.keras.layers.Flatten(),
+    # tf.keras.layers.Dense(units = 80, activation = "relu"),
+    # tf.keras.layers.Dense(units = len(labels), activation = "softmax")
+
+    # even better model than above
+    tf.keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation="relu"),
+    tf.keras.layers.MaxPooling2D(pool_size=(6, 6)),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(units=80, activation="relu"),
+    tf.keras.layers.Dense(units=len(labels), activation="softmax")
+])
+
+
+
 
 # Feedforward Neural Network Model
-model = tf.keras.Sequential([
-    tf.keras.layers.Input(shape=(image_size, image_size, 1)),  # B&W images
-    tf.keras.layers.Rescaling(1. / 255, input_shape=(image_size, image_size, 1)), # normalize Images into range 0 to 1.
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(80, activation='relu'),
-    tf.keras.layers.Dense(4, activation='softmax'), # total probability to be one but not necessary for hidden layers
-])
+# model = tf.keras.Sequential([
+#     tf.keras.layers.Input(shape=(image_size, image_size, 1)),  # B&W images
+#     tf.keras.layers.Rescaling(1. / 255, input_shape=(image_size, image_size, 1)), # normalize Images into range 0 to 1.
+#     tf.keras.layers.Flatten(),
+#     tf.keras.layers.Dense(80, activation='relu'),
+#     # tf.keras.layers.Dropout(0.2), # no significant gain in performance observed
+#     tf.keras.layers.Dense(len(labels), activation='softmax'), # total probability to be one but not necessary for hidden layers
+# ])
 
 model.compile(optimizer='adam',
              loss='sparse_categorical_crossentropy',
